@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Podcast 学习助手</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #6c5ce7;
+      --primary-light: #a29bfe;
+      --secondary: #fdcb6e;
+      --success: #00b894;
+      --danger: #ff7675;
+      --dark: #2d3436;
+      --light: #f5f6fa;
+      --white: #ffffff;
+      --gray: #636e72;
+      --shadow: 0 4px 15px rgba(0,0,0,0.1);
+      --radius: 16px;
+      --radius-sm: 8px;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--light);
+      color: var(--dark);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: var(--gray);
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 30px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    .form-textarea {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #eee;
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      min-height: 150px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #eee;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .btn {
+      padding: 14px 28px;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-light);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: var(--light);
+      color: var(--dark);
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+
+    .player {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .player.active {
+      display: block;
+    }
+
+    .player audio {
+      width: 100%;
+      margin-top: 15px;
+    }
+
+    .player-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px;
+      background: var(--light);
+      border-radius: var(--radius-sm);
+    }
+
+    .player-icon {
+      font-size: 32px;
+    }
+
+    .player-text {
+      flex: 1;
+    }
+
+    .player-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .player-status {
+      font-size: 13px;
+      color: var(--gray);
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 30px;
+    }
+
+    .loading.active {
+      display: block;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .history {
+      margin-top: 30px;
+    }
+
+    .history h3 {
+      margin-bottom: 15px;
+      color: var(--dark);
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px;
+      background: var(--white);
+      border-radius: var(--radius-sm);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .history-icon {
+      font-size: 24px;
+    }
+
+    .history-content {
+      flex: 1;
+    }
+
+    .history-text {
+      font-weight: 500;
+      margin-bottom: 4px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .history-meta {
+      font-size: 12px;
+      color: var(--gray);
+    }
+
+    .history-play {
+      padding: 8px 16px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .history-play:hover {
+      background: var(--primary-light);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--gray);
+      text-decoration: none;
+      margin-bottom: 20px;
+    }
+
+    .back-link:hover {
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">← 返回 WorkSystem</a>
+    
+    <div class="header">
+      <h1>🎙️ Podcast 学习助手</h1>
+      <p>输入你想学习的内容，生成音频随时收听</p>
+    </div>
+
+    <div class="card">
+      <!-- Tab 切换 -->
+      <div class="tabs" style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button class="tab-btn active" onclick="switchTab('text')" id="tabText" style="padding: 10px 20px; border: none; background: var(--primary); color: white; border-radius: 8px; cursor: pointer;">📝 文字输入</button>
+        <button class="tab-btn" onclick="switchTab('url')" id="tabUrl" style="padding: 10px 20px; border: 2px solid #eee; background: white; color: var(--gray); border-radius: 8px; cursor: pointer;">🌐 网页URL</button>
+      </div>
+
+      <!-- 文字输入模式 -->
+      <div id="textMode">
+        <div class="form-group">
+          <label class="form-label">📝 输入学习内容</label>
+          <textarea 
+            class="form-textarea" 
+            id="inputText" 
+            placeholder="输入你想了解的知识内容...&#10;例如：什么是机器学习？&#10;或者：给我讲讲 Python 的异步编程"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- URL 输入模式 -->
+      <div id="urlMode" style="display: none;">
+        <div class="form-group">
+          <label class="form-label">🌐 输入网页链接</label>
+          <input 
+            type="url" 
+            class="form-input" 
+            id="inputUrl" 
+            placeholder="输入博客或文章链接，例如：https://example.com/article"
+            style="width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 8px; font-size: 16px;"
+          >
+        </div>
+        <div class="form-group">
+          <label class="form-label">📄 内容长度</label>
+          <select class="form-select" id="maxLength">
+            <option value="1000">较短（1000字）</option>
+            <option value="2000" selected>中等（2000字）</option>
+            <option value="3000">较长（3000字）</option>
+            <option value="5000">完整（5000字）</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">🎤 选择声音</label>
+        <select class="form-select" id="voiceSelect">
+          <option value="zh-CN-XiaoxiaoNeural">晓晓（女声）</option>
+          <option value="zh-CN-YunxiNeural">云希（男声）</option>
+          <option value="zh-CN-YunyangNeural">云扬（男声）</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary" id="generateBtn" onclick="generateAudio()">
+        🎵 生成音频
+      </button>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>正在生成音频，请稍候...</p>
+      </div>
+
+      <div class="player" id="player">
+        <div class="player-info">
+          <span class="player-icon">🎧</span>
+          <div class="player-text">
+            <div class="player-title">音频已生成</div>
+            <div class="player-status" id="playerStatus">点击播放</div>
+          </div>
+        </div>
+        <audio id="audioPlayer" controls></audio>
+      </div>
+    </div>
+
+    <div class="history">
+      <h3>📚 历史记录</h3>
+      <div class="history-list" id="historyList">
+        <p style="color: var(--gray);">暂无历史记录</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentMode = 'text';
+
+    // Load history on page load
+    // loadHistory(); // 延迟加载，等页面完全加载后
+    
+    window.addEventListener('load', () => {
+      loadHistory();
+    });
+
+    function switchTab(mode) {
+      currentMode = mode;
+      const primary = '#6c5ce7';
+      const white = '#ffffff';
+      const gray = '#636e72';
+      document.getElementById('tabText').style.background = mode === 'text' ? primary : white;
+      document.getElementById('tabText').style.color = mode === 'text' ? white : gray;
+      document.getElementById('tabText').style.border = mode === 'text' ? 'none' : '2px solid #eee';
+      document.getElementById('tabUrl').style.background = mode === 'url' ? primary : white;
+      document.getElementById('tabUrl').style.color = mode === 'url' ? white : gray;
+      document.getElementById('tabUrl').style.border = mode === 'url' ? 'none' : '2px solid #eee';
+      document.getElementById('textMode').style.display = mode === 'text' ? 'block' : 'none';
+      document.getElementById('urlMode').style.display = mode === 'url' ? 'block' : 'none';
+    }
+
+    async function generateAudio() {
+      const voice = document.getElementById('voiceSelect').value;
+      let text = '';
+      let apiUrl = '/api/tts/generate';
+      let requestBody = {};
+
+      if (currentMode === 'text') {
+        text = document.getElementById('inputText').value.trim();
+        if (!text) {
+          alert('请输入学习内容');
+          return;
+        }
+        apiUrl = '/api/tts/generate';
+        requestBody = { text, voice };
+      } else {
+        const url = document.getElementById('inputUrl').value.trim();
+        if (!url) {
+          alert('请输入网页链接');
+          return;
+        }
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          alert('请输入有效的网页链接');
+          return;
+        }
+        const maxLength = parseInt(document.getElementById('maxLength').value);
+        apiUrl = '/api/tts/generate-from-url';
+        requestBody = { url, voice, maxLength };
+      }
+
+      const btn = document.getElementById('generateBtn');
+      const loading = document.getElementById('loading');
+      const player = document.getElementById('player');
+      
+      btn.disabled = true;
+      loading.classList.add('active');
+      player.classList.remove('active');
+
+      try {
+        const res = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody)
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+          currentAudioUrl = data.audioUrl;
+          document.getElementById('audioPlayer').src = data.audioUrl;
+          player.classList.add('active');
+          
+          // 显示标题
+          if (data.title) {
+            document.getElementById('playerStatus').textContent = data.title;
+          }
+          
+          // Reload history
+          loadHistory();
+        } else {
+          alert('生成失败: ' + (data.error || '未知错误'));
+        }
+      } catch (e) {
+        alert('生成失败: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        loading.classList.remove('active');
+      }
+    }
+
+    async function loadHistory() {
+      try {
+        const res = await fetch('/api/tts/list');
+        const data = await res.json();
+        
+        const list = document.getElementById('historyList');
+        
+        if (!data.items || data.items.length === 0) {
+          list.innerHTML = '<p style="color: var(--gray);">暂无历史记录</p>';
+          return;
+        }
+        
+        list.innerHTML = data.items.slice(0, 10).map(item => {
+          const date = new Date(item.createdAt);
+          const dateStr = date.toLocaleDateString('zh-CN', { 
+            month: 'short', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          
+          return `
+            <div class="history-item">
+              <span class="history-icon">🎵</span>
+              <div class="history-content">
+                <div class="history-text">${item.filename}</div>
+                <div class="history-meta">${dateStr}</div>
+              </div>
+              <button class="history-play" onclick="playAudio('${item.url}')">播放</button>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        console.error('Failed to load history:', e);
+      }
+    }
+
+    function playAudio(url) {
+      const player = document.getElementById('audioPlayer');
+      player.src = url;
+      player.play();
+      
+      document.getElementById('player').classList.add('active');
+    }
+
+    // Allow Enter to generate
+    document.getElementById('inputText').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.ctrlKey) {
+        generateAudio();
+      }
+    });
+  </script>
+</body>
+</html>
